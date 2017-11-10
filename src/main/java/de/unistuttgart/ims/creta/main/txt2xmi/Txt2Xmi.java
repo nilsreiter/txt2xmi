@@ -7,7 +7,9 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.AggregateBuilder;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import com.lexicalscope.jewel.cli.CliFactory;
 import com.lexicalscope.jewel.cli.Option;
@@ -31,10 +33,16 @@ public class Txt2Xmi {
 			dictionaryFiles = new File[] {};
 		System.err.println("Found " + dictionaryFiles.length + " dictionary file(s): " + dictionaryFiles.toString());
 
-		CollectionReaderDescription crd = CollectionReaderFactory.createReaderDescription(TextReader.class,
+		TypeSystemDescription tsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+		for (File f : dictionaryFiles) {
+			tsd.addType("webanno.custom." + f.getName().replace(".txt", ""), "", "uima.tcas.Annotation");
+		}
+		// tsd.toXML(System.out);
+
+		CollectionReaderDescription crd = CollectionReaderFactory.createReaderDescription(TextReader.class, tsd,
 				TextReader.PARAM_SOURCE_LOCATION, options.getInput() + File.separator + "*.txt");
 
-		AggregateBuilder b = new AggregateBuilder();
+		AggregateBuilder b = new AggregateBuilder(tsd, null, null);
 		b.add(AnalysisEngineFactory.createEngineDescription(SegmentAnnotator.class));
 		for (File f : dictionaryFiles) {
 			String name = "webanno.custom." + f.getName().replace(".txt", "");
